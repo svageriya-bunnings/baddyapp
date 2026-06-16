@@ -1,0 +1,2860 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1b5e20" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Badminton Session Manager</title>
+
+  <!-- PWA Web App Manifest (inline data-URI — no extra file needed) -->
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Badminton%20Session%20Manager%22%2C%22short_name%22%3A%22Badminton%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231b5e20%22%2C%22theme_color%22%3A%22%231b5e20%22%2C%22description%22%3A%22Offline%20badminton%20session%20and%20fixture%20manager%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAA1BMVEUbXiD%2F9HMsAAAAI0lEQVR42mNkYGBg%2BGcAAAGAAJ%2FPZmcAAAAASUVORK5CYII%3D%22%2C%22sizes%22%3A%22128x128%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D" />
+
+  <style>
+    /* ─── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      /* Brand palette */
+      --clr-primary:        #1b5e20;   /* dark green */
+      --clr-primary-mid:    #2e7d32;
+      --clr-primary-light:  #43a047;
+      --clr-primary-xlight: #c8e6c9;
+      --clr-accent:         #f9a825;   /* amber highlight */
+      --clr-accent-dark:    #f57f17;
+      --clr-danger:         #c62828;
+      --clr-danger-light:   #ffcdd2;
+      --clr-win:            #2e7d32;
+      --clr-lose:           #757575;
+
+      /* Neutrals */
+      --clr-bg:             #f1f8e9;
+      --clr-surface:        #ffffff;
+      --clr-surface-2:      #f9fbe7;
+      --clr-border:         #dcedc8;
+      --clr-text:           #1c2b1e;
+      --clr-text-muted:     #5a6e5c;
+      --clr-text-on-dark:   #ffffff;
+
+      /* Level colours */
+      --clr-beginner:       #1565c0;
+      --clr-intermediate:   #e65100;
+      --clr-advanced:       #6a1b9a;
+
+      /* Typography */
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   Helvetica, Arial, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", "Consolas", monospace;
+
+      --text-xs:   0.70rem;
+      --text-sm:   0.85rem;
+      --text-base: 1rem;
+      --text-lg:   1.15rem;
+      --text-xl:   1.4rem;
+      --text-2xl:  1.75rem;
+
+      --fw-normal: 400;
+      --fw-medium: 500;
+      --fw-bold:   700;
+
+      /* Spacing */
+      --sp-1:  0.25rem;
+      --sp-2:  0.5rem;
+      --sp-3:  0.75rem;
+      --sp-4:  1rem;
+      --sp-5:  1.25rem;
+      --sp-6:  1.5rem;
+      --sp-8:  2rem;
+      --sp-10: 2.5rem;
+      --sp-12: 3rem;
+
+      /* Radii */
+      --radius-sm:  6px;
+      --radius-md:  10px;
+      --radius-lg:  16px;
+      --radius-xl:  24px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm:  0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.08);
+      --shadow-md:  0 4px 12px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.08);
+      --shadow-lg:  0 8px 24px rgba(0,0,0,.14), 0 4px 8px rgba(0,0,0,.08);
+
+      /* Layout */
+      --nav-height:     58px;
+      --max-content:    680px;
+      --transition:     0.22s ease;
+    }
+
+    /* ─── CSS Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--text-base);
+      color: var(--clr-text);
+      background: var(--clr-bg);
+      line-height: 1.55;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    img, svg { display: block; max-width: 100%; }
+
+    button {
+      font-family: inherit;
+      font-size: inherit;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      background: none;
+    }
+    button:focus-visible {
+      outline: 3px solid var(--clr-primary-light);
+      outline-offset: 2px;
+    }
+
+    input, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid var(--clr-primary-light);
+      outline-offset: 1px;
+    }
+
+    a { color: var(--clr-primary-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    ul, ol { list-style: none; }
+
+    h1, h2, h3, h4 {
+      line-height: 1.25;
+      font-weight: var(--fw-bold);
+    }
+
+    /* ─── Utility Classes ───────────────────────────────────────── */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    .flex        { display: flex; }
+    .flex-col    { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .justify-center  { justify-content: center; }
+    .gap-2       { gap: var(--sp-2); }
+    .gap-3       { gap: var(--sp-3); }
+    .gap-4       { gap: var(--sp-4); }
+    .w-full      { width: 100%; }
+    .text-center { text-align: center; }
+    .text-sm     { font-size: var(--text-sm); }
+    .text-xs     { font-size: var(--text-xs); }
+    .font-bold   { font-weight: var(--fw-bold); }
+    .font-medium { font-weight: var(--fw-medium); }
+    .text-muted  { color: var(--clr-text-muted); }
+
+    /* ─── Component: App Shell ──────────────────────────────────── */
+    #app-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--nav-height);
+      background: var(--clr-primary);
+      color: var(--clr-text-on-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--sp-4);
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+      gap: var(--sp-3);
+    }
+
+    #nav-brand {
+      font-size: var(--text-lg);
+      font-weight: var(--fw-bold);
+      letter-spacing: .02em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #nav-brand span { color: var(--clr-accent); }
+
+    #nav-meta {
+      font-size: var(--text-xs);
+      color: rgba(255,255,255,.75);
+      text-align: center;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #nav-actions {
+      display: flex;
+      gap: var(--sp-1);
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: var(--sp-1) var(--sp-2);
+      border-radius: var(--radius-sm);
+      color: rgba(255,255,255,.7);
+      font-size: var(--text-xs);
+      transition: background var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+    .nav-btn svg { width: 18px; height: 18px; }
+    .nav-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .nav-btn.active {
+      background: rgba(255,255,255,.18);
+      color: var(--clr-accent);
+    }
+
+    /* ─── Component: View Container ────────────────────────────── */
+    #view-root {
+      margin-top: var(--nav-height);
+      min-height: calc(100dvh - var(--nav-height));
+      padding: var(--sp-6) var(--sp-4) var(--sp-12);
+    }
+
+    .view-inner {
+      max-width: var(--max-content);
+      margin: 0 auto;
+    }
+
+    /* ─── View Transitions ──────────────────────────────────────── */
+    .view-enter {
+      animation: viewFadeIn var(--transition) both;
+    }
+
+    @keyframes viewFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Component: Card ───────────────────────────────────────── */
+    .card {
+      background: var(--clr-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--clr-border);
+      padding: var(--sp-5);
+    }
+
+    .card + .card { margin-top: var(--sp-4); }
+
+    .card-title {
+      font-size: var(--text-lg);
+      font-weight: var(--fw-bold);
+      color: var(--clr-primary);
+      margin-bottom: var(--sp-4);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    /* ─── Component: Button ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-2);
+      padding: var(--sp-3) var(--sp-5);
+      border-radius: var(--radius-md);
+      font-weight: var(--fw-medium);
+      font-size: var(--text-sm);
+      transition: background var(--transition), transform var(--transition),
+                  box-shadow var(--transition), opacity var(--transition);
+      white-space: nowrap;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: var(--clr-primary-light);
+      color: #fff;
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-primary:hover { background: var(--clr-primary); box-shadow: var(--shadow-md); }
+
+    .btn-secondary {
+      background: var(--clr-surface);
+      color: var(--clr-primary);
+      border: 1.5px solid var(--clr-primary-light);
+    }
+    .btn-secondary:hover { background: var(--clr-primary-xlight); }
+
+    .btn-danger {
+      background: var(--clr-danger);
+      color: #fff;
+    }
+    .btn-danger:hover { background: #b71c1c; }
+
+    .btn-ghost {
+      color: var(--clr-text-muted);
+      padding: var(--sp-2) var(--sp-3);
+    }
+    .btn-ghost:hover { color: var(--clr-text); background: rgba(0,0,0,.05); }
+
+    .btn-icon {
+      padding: var(--sp-2);
+      border-radius: var(--radius-sm);
+      color: var(--clr-text-muted);
+    }
+    .btn-icon:hover { background: rgba(0,0,0,.07); color: var(--clr-text); }
+    .btn-icon svg { width: 17px; height: 17px; }
+
+    .btn-full { width: 100%; }
+    .btn-sm {
+      padding: var(--sp-2) var(--sp-3);
+      font-size: var(--text-xs);
+    }
+
+    /* ─── Component: Form Controls ──────────────────────────────── */
+    .form-group { display: flex; flex-direction: column; gap: var(--sp-1); }
+    .form-label {
+      font-size: var(--text-sm);
+      font-weight: var(--fw-medium);
+      color: var(--clr-text-muted);
+    }
+
+    .form-input {
+      padding: var(--sp-3) var(--sp-4);
+      border: 1.5px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      background: var(--clr-surface);
+      transition: border-color var(--transition);
+      width: 100%;
+    }
+    .form-input:focus { border-color: var(--clr-primary-light); }
+    .form-input.error { border-color: var(--clr-danger); }
+
+    .form-error {
+      font-size: var(--text-xs);
+      color: var(--clr-danger);
+      min-height: 1em;
+    }
+
+    /* ─── Component: Level Badge ─────────────────────────────────  */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px var(--sp-2);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--fw-bold);
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .badge-beginner     { background: #e3f2fd; color: var(--clr-beginner); }
+    .badge-intermediate { background: #fff3e0; color: var(--clr-intermediate); }
+    .badge-advanced     { background: #f3e5f5; color: var(--clr-advanced); }
+
+    /* ─── Component: Toast / Inline Notice ──────────────────────── */
+    .notice {
+      padding: var(--sp-3) var(--sp-4);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+    .notice-info    { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #43a047; }
+    .notice-warning { background: #fff8e1; color: #f57f17; border-left: 4px solid #ffa000; }
+    .notice-error   { background: var(--clr-danger-light); color: var(--clr-danger); border-left: 4px solid var(--clr-danger); }
+
+    /* ─── Component: Divider ─────────────────────────────────────  */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--clr-border);
+      margin: var(--sp-5) 0;
+    }
+
+    /* ─── Empty / Loading placeholder ───────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: var(--sp-10) var(--sp-4);
+      color: var(--clr-text-muted);
+    }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: var(--sp-3); }
+    .empty-state-text { font-size: var(--text-sm); }
+
+    /* ─── Session-Picker Modal ───────────────────────────────────  */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--sp-4);
+      animation: viewFadeIn .2s both;
+    }
+    .modal {
+      background: var(--clr-surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 420px;
+      padding: var(--sp-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+    }
+    .modal-title {
+      font-size: var(--text-xl);
+      font-weight: var(--fw-bold);
+      color: var(--clr-primary);
+    }
+    .modal-subtitle {
+      font-size: var(--text-sm);
+      color: var(--clr-text-muted);
+      margin-top: calc(var(--sp-1) * -1);
+    }
+    .session-date-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+    }
+    .session-date-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--sp-3) var(--sp-4);
+      background: var(--clr-bg);
+      border: 1.5px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      font-weight: var(--fw-medium);
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--clr-text);
+      transition: background var(--transition), border-color var(--transition);
+      text-align: left;
+    }
+    .session-date-btn:hover {
+      background: var(--clr-primary-xlight);
+      border-color: var(--clr-primary-light);
+    }
+    .session-date-meta {
+      font-size: var(--text-xs);
+      color: var(--clr-text-muted);
+    }
+
+    /* ─── Responsive Breakpoints ─────────────────────────────────  */
+    @media (min-width: 540px) {
+      #view-root { padding: var(--sp-8) var(--sp-6) var(--sp-12); }
+    }
+    @media (min-width: 768px) {
+      #nav-brand { font-size: var(--text-xl); }
+      #nav-meta  { font-size: var(--text-sm); }
+      .nav-btn   { font-size: var(--text-sm); }
+      .nav-btn svg { width: 20px; height: 20px; }
+    }
+
+    /* ─── Setup View ─────────────────────────────────────────────── */
+    .setup-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-4);
+    }
+    @media (max-width: 380px) {
+      .setup-meta-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Level segmented control (hidden radio inputs + styled labels) */
+    .level-seg {
+      display: flex;
+      gap: var(--sp-1);
+    }
+    .level-seg-item {
+      flex: 1;
+    }
+    .level-seg-item input[type="radio"] {
+      position: absolute;
+      width: 0; height: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .level-seg-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--sp-2) var(--sp-2);
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--clr-border);
+      font-size: var(--text-sm);
+      font-weight: var(--fw-medium);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition),
+                  color var(--transition);
+      text-align: center;
+      user-select: none;
+      -webkit-user-select: none;
+      white-space: nowrap;
+    }
+    .level-seg-label:hover {
+      background: var(--clr-surface-2);
+      border-color: var(--clr-text-muted);
+    }
+    .level-seg-item input:checked + .level-seg-label.level-seg-beginner {
+      background: #e3f2fd; border-color: var(--clr-beginner); color: var(--clr-beginner);
+    }
+    .level-seg-item input:checked + .level-seg-label.level-seg-intermediate {
+      background: #fff3e0; border-color: var(--clr-intermediate); color: var(--clr-intermediate);
+    }
+    .level-seg-item input:checked + .level-seg-label.level-seg-advanced {
+      background: #f3e5f5; border-color: var(--clr-advanced); color: var(--clr-advanced);
+    }
+    .level-seg.level-seg-sm .level-seg-label {
+      padding: var(--sp-1) var(--sp-2);
+      font-size: var(--text-xs);
+    }
+
+    /* Card header row: title left, action right */
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-4);
+    }
+    .card-title-row .card-title { margin-bottom: 0; }
+
+    /* Player count pill inside card title */
+    .player-count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.5rem;
+      height: 1.5rem;
+      padding: 0 var(--sp-2);
+      background: var(--clr-primary-light);
+      color: #fff;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--fw-bold);
+      margin-left: var(--sp-2);
+      vertical-align: middle;
+    }
+
+    /* Player list */
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      margin-top: var(--sp-3);
+    }
+    .player-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--sp-3);
+      background: var(--clr-bg);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--clr-border);
+      gap: var(--sp-2);
+      transition: background var(--transition);
+    }
+    .player-row:hover { background: var(--clr-primary-xlight); }
+    .player-row-editing {
+      background: var(--clr-surface-2) !important;
+      border-color: var(--clr-primary-light) !important;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      flex: 1;
+      min-width: 0;
+    }
+    .player-name {
+      font-weight: var(--fw-medium);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .player-actions {
+      display: flex;
+      gap: var(--sp-1);
+      flex-shrink: 0;
+    }
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+    .edit-btns {
+      display: flex;
+      gap: var(--sp-2);
+    }
+
+    /* Setup footer: reset left, generate right */
+    .setup-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-3);
+      margin-top: var(--sp-6);
+      flex-wrap: wrap;
+    }
+    .generate-meta {
+      font-size: var(--text-xs);
+      opacity: .8;
+      margin-left: var(--sp-1);
+    }
+
+    /* ─── Stats View ───────────────────────────────────────────────  */
+    .stats-section-title {
+      font-size: var(--text-lg);
+      font-weight: var(--fw-bold);
+      color: var(--clr-primary);
+      margin-bottom: var(--sp-4);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    /* Sort buttons */
+    .sort-bar {
+      display: flex;
+      gap: var(--sp-1);
+      flex-wrap: wrap;
+      margin-bottom: var(--sp-3);
+    }
+    .sort-btn {
+      padding: var(--sp-1) var(--sp-3);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--fw-medium);
+      border: 1.5px solid var(--clr-border);
+      background: var(--clr-surface);
+      color: var(--clr-text-muted);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .sort-btn:hover { background: var(--clr-primary-xlight); border-color: var(--clr-primary-light); color: var(--clr-primary); }
+    .sort-btn.active { background: var(--clr-primary); border-color: var(--clr-primary); color: #fff; }
+
+    /* Leaderboard table */
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--text-sm);
+    }
+    .lb-table th {
+      text-align: left;
+      padding: var(--sp-2) var(--sp-3);
+      font-size: var(--text-xs);
+      font-weight: var(--fw-bold);
+      color: var(--clr-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      border-bottom: 2px solid var(--clr-border);
+      white-space: nowrap;
+    }
+    .lb-table td {
+      padding: var(--sp-2) var(--sp-3);
+      border-bottom: 1px solid var(--clr-border);
+      vertical-align: middle;
+    }
+    .lb-table tr:last-child td { border-bottom: none; }
+    .lb-table tr:hover td { background: var(--clr-bg); }
+    .lb-row-gold   td:first-child::before { content: '🥇 '; }
+    .lb-row-silver td:first-child::before { content: '🥈 '; }
+    .lb-row-bronze td:first-child::before { content: '🥉 '; }
+    .lb-row-gold   td { background: #fffde7; }
+    .lb-row-silver td { background: #f5f5f5; }
+    .lb-row-bronze td { background: #fff3e0; }
+    .winpct-bar {
+      display: inline-block;
+      width: 40px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--clr-border);
+      vertical-align: middle;
+      margin-left: var(--sp-1);
+      position: relative;
+      overflow: hidden;
+    }
+    .winpct-fill {
+      position: absolute;
+      top: 0; left: 0; height: 100%;
+      background: var(--clr-primary-light);
+      border-radius: 3px;
+    }
+
+    /* Partnership list */
+    .partnership-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: var(--sp-3);
+      background: var(--clr-bg);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--clr-border);
+      margin-bottom: var(--sp-2);
+    }
+    .partnership-rank {
+      font-weight: var(--fw-bold);
+      color: var(--clr-text-muted);
+      font-size: var(--text-sm);
+      min-width: 1.5rem;
+      text-align: center;
+    }
+    .partnership-names {
+      flex: 1;
+      font-weight: var(--fw-medium);
+      font-size: var(--text-sm);
+    }
+    .partnership-wins {
+      font-size: var(--text-xs);
+      font-weight: var(--fw-bold);
+      color: var(--clr-primary-light);
+      white-space: nowrap;
+    }
+
+    /* Variety meter */
+    .variety-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: var(--sp-3) var(--sp-3);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--clr-border);
+      margin-bottom: var(--sp-2);
+      background: var(--clr-surface);
+    }
+    .variety-row.variety-low {
+      border-color: #ffa000;
+      background: #fff8e1;
+    }
+    .variety-name {
+      font-weight: var(--fw-medium);
+      font-size: var(--text-sm);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .variety-meter {
+      width: 64px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--clr-border);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .variety-fill {
+      position: absolute;
+      top: 0; left: 0; height: 100%;
+      background: var(--clr-primary-light);
+      border-radius: 3px;
+      transition: width .4s ease;
+    }
+    .variety-fill.variety-fill-low { background: #ffa000; }
+    .variety-score-text {
+      font-size: var(--text-xs);
+      color: var(--clr-text-muted);
+      white-space: nowrap;
+      min-width: 2.5rem;
+      text-align: right;
+    }
+
+    /* Round history accordion */
+    .accordion-item {
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: var(--sp-2);
+    }
+    .accordion-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--sp-3) var(--sp-4);
+      background: var(--clr-surface-2);
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: var(--text-sm);
+      font-weight: var(--fw-medium);
+      color: var(--clr-text);
+      text-align: left;
+      gap: var(--sp-2);
+      transition: background var(--transition);
+    }
+    .accordion-toggle:hover { background: var(--clr-primary-xlight); }
+    .accordion-toggle[aria-expanded="true"] { background: var(--clr-primary-xlight); }
+    .accordion-chevron {
+      transition: transform var(--transition);
+      flex-shrink: 0;
+      color: var(--clr-text-muted);
+    }
+    .accordion-toggle[aria-expanded="true"] .accordion-chevron { transform: rotate(180deg); }
+    .accordion-body {
+      padding: var(--sp-3) var(--sp-4);
+      background: var(--clr-surface);
+      display: none;
+    }
+    .accordion-body.open { display: block; }
+    .history-fixture-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--sp-2);
+      padding: var(--sp-2) 0;
+      border-bottom: 1px solid var(--clr-border);
+      font-size: var(--text-sm);
+    }
+    .history-fixture-row:last-child { border-bottom: none; }
+    .history-court-tag {
+      font-size: var(--text-xs);
+      font-weight: var(--fw-bold);
+      color: var(--clr-text-on-dark);
+      background: var(--clr-primary);
+      border-radius: var(--radius-sm);
+      padding: 2px var(--sp-2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .history-result {
+      flex: 1;
+      line-height: 1.5;
+    }
+    .history-winner { color: var(--clr-win); font-weight: var(--fw-medium); }
+    .history-loser  { color: var(--clr-lose); }
+
+    /* Stats footer */
+    .stats-footer {
+      margin-top: var(--sp-6);
+      display: flex;
+      gap: var(--sp-3);
+      flex-wrap: wrap;
+    }
+
+    /* Scrollable table wrapper for small screens */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ─── Round View ─────────────────────────────────────────────── */
+    .round-header {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-5);
+    }
+    .round-title {
+      font-size: var(--text-xl);
+      font-weight: var(--fw-bold);
+      color: var(--clr-primary);
+      flex: 1;
+    }
+    .round-subtitle {
+      font-size: var(--text-sm);
+      color: var(--clr-text-muted);
+      margin-top: 2px;
+    }
+
+    /* Fixture card */
+    .fixture-card {
+      background: var(--clr-surface);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--clr-border);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: var(--sp-4);
+      transition: box-shadow var(--transition);
+    }
+    .fixture-court-label {
+      background: var(--clr-primary);
+      color: var(--clr-text-on-dark);
+      font-size: var(--text-xs);
+      font-weight: var(--fw-bold);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: var(--sp-2) var(--sp-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .match-quality-tag {
+      font-size: var(--text-xs);
+      font-weight: var(--fw-medium);
+      letter-spacing: .03em;
+      text-transform: none;
+      padding: 2px var(--sp-2);
+      border-radius: var(--radius-full);
+      background: rgba(255,255,255,.18);
+    }
+    .match-quality-tag.mq-well    { background: rgba(255,255,255,.22); color: #e8f5e9; }
+    .match-quality-tag.mq-close   { background: rgba(255,255,255,.18); color: #fff9c4; }
+    .match-quality-tag.mq-slight  { background: rgba(255,193,7,.25);   color: #fff8e1; }
+    .match-quality-tag.mq-uneven  { background: rgba(244,67,54,.25);   color: #ffcdd2; }
+
+    .fixture-teams {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      gap: 0;
+    }
+    .fixture-team {
+      padding: var(--sp-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      transition: background var(--transition), opacity var(--transition);
+    }
+    .fixture-team-label {
+      font-size: var(--text-xs);
+      font-weight: var(--fw-bold);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--clr-text-muted);
+    }
+    .fixture-player {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      flex-wrap: wrap;
+    }
+    .fixture-player-name {
+      font-weight: var(--fw-medium);
+      font-size: var(--text-sm);
+    }
+    .fixture-vs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--clr-bg);
+      padding: var(--sp-2);
+      font-weight: var(--fw-bold);
+      color: var(--clr-text-muted);
+      font-size: var(--text-sm);
+      min-width: 36px;
+    }
+
+    /* Winner / Loser states */
+    .fixture-team.team-winner {
+      background: #e8f5e9;
+    }
+    .fixture-team.team-loser {
+      background: var(--clr-bg);
+      opacity: .55;
+    }
+    .fixture-team.team-winner .fixture-team-label {
+      color: var(--clr-win);
+    }
+
+    /* Win/Result buttons row */
+    .fixture-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-2);
+      padding: var(--sp-3) var(--sp-4);
+      border-top: 1px solid var(--clr-border);
+      background: var(--clr-surface-2);
+    }
+    .btn-win {
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      font-weight: var(--fw-medium);
+      border: 1.5px solid var(--clr-border);
+      background: var(--clr-surface);
+      color: var(--clr-text);
+      transition: background var(--transition), border-color var(--transition),
+                  color var(--transition), transform var(--transition);
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+    .btn-win:hover {
+      border-color: var(--clr-primary-light);
+      background: var(--clr-primary-xlight);
+    }
+    .btn-win:active { transform: scale(.97); }
+    .btn-win.win-selected {
+      background: var(--clr-primary);
+      border-color: var(--clr-primary);
+      color: #fff;
+    }
+    .btn-win.lose-dimmed {
+      opacity: .45;
+      background: var(--clr-bg);
+      border-color: var(--clr-border);
+      color: var(--clr-text-muted);
+    }
+
+    /* Fixture edit mode */
+    .fixture-court-label { position: relative; }
+    .fixture-court-edit-btn {
+      margin-left: auto;
+      padding: 2px 10px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+      font-weight: var(--fw-medium);
+      border: 1px solid var(--clr-border);
+      background: rgba(99,102,241,.18);
+      color: var(--clr-primary-light);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .fixture-court-edit-btn:hover { background: rgba(99,102,241,.32); }
+    .fixture-edit-mode {
+      padding: var(--sp-3) var(--sp-4) var(--sp-4);
+      background: var(--clr-surface-2);
+      border-top: 1px solid var(--clr-border);
+    }
+    .fixture-edit-teams-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: var(--sp-3);
+      align-items: start;
+      margin-bottom: var(--sp-3);
+    }
+    .fixture-edit-team-label {
+      font-size: var(--text-xs);
+      font-weight: var(--fw-semibold);
+      color: var(--clr-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: var(--sp-1);
+    }
+    .fixture-edit-select {
+      width: 100%;
+      padding: var(--sp-2) var(--sp-2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--clr-border);
+      background: var(--clr-surface);
+      color: var(--clr-text);
+      font-size: var(--text-sm);
+      margin-bottom: var(--sp-1);
+    }
+    .fixture-edit-btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--sp-2);
+    }
+
+    /* Round progress bar */
+    .round-progress {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-5);
+    }
+    .round-progress-bar {
+      flex: 1;
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--clr-border);
+      overflow: hidden;
+    }
+    .round-progress-fill {
+      height: 100%;
+      background: var(--clr-primary-light);
+      border-radius: var(--radius-full);
+      transition: width .4s ease;
+    }
+    .round-progress-label {
+      font-size: var(--text-xs);
+      color: var(--clr-text-muted);
+      white-space: nowrap;
+    }
+
+    /* Round footer */
+    .round-footer {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+      margin-top: var(--sp-6);
+    }
+    .round-footer-row {
+      display: flex;
+      gap: var(--sp-3);
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Session Picker Modal Mount ── -->
+  <div id="session-modal-root"></div>
+
+  <!-- ── Top Navigation Bar ── -->
+  <nav id="app-nav" role="navigation" aria-label="Main navigation">
+    <div id="nav-brand">🏸 <span>Badminton</span></div>
+    <div id="nav-meta" aria-live="polite"></div>
+    <div id="nav-actions" role="menubar"></div>
+  </nav>
+
+  <!-- ── View Mount Point ── -->
+  <main id="view-root" role="main">
+    <div class="view-inner" id="view-container"></div>
+  </main>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════
+       CONSTANTS
+    ═══════════════════════════════════════════════════════════════ */
+    const STORAGE_PREFIX = 'badminton_session_';
+    const VIEWS = Object.freeze({ SETUP: 'SETUP', ROUND: 'ROUND', STATS: 'STATS' });
+    const LEVELS = Object.freeze({ Beginner: 1, Intermediate: 2, Advanced: 3 });
+
+    /* ═══════════════════════════════════════════════════════════════
+       APPSTATE  — single source of truth
+    ═══════════════════════════════════════════════════════════════ */
+    const AppState = {
+      /* ── Session meta ── */
+      sessionDate:  todayISO(),   // "YYYY-MM-DD"
+      courts:       3,            // number of courts booked
+      currentView:  VIEWS.SETUP,  // active view key
+
+      /* ── Players ──
+         { id: string, name: string, level: "Beginner"|"Intermediate"|"Advanced" }
+      */
+      players: [],
+
+      /* ── Rounds ──
+         {
+           roundNumber:      number,
+           fixtures:         Fixture[],   // defined in Part 3
+           winnersSelected:  boolean,
+           sitOut:           string|null  // player id sitting out
+         }
+      */
+      rounds: [],
+
+      /* ── Sit-out tracker: playerId → number of times sat out ── */
+      sitOuts: {},
+
+      /* ── Stats ──
+         { [playerId]: { wins, losses, gamesPlayed, partners: { [partnerId]: wins } } }
+         NOTE: Sets are not JSON-serialisable; we use plain objects for persistence.
+      */
+      stats: {},
+
+      /* ── Undo stack for player removals ── */
+      _removedPlayers: [],
+
+      /* ─────────────────────────────────────────────────────────
+         PERSISTENCE HELPERS
+      ───────────────────────────────────────────────────────── */
+
+      /** Return the localStorage key for the current sessionDate. */
+      _storageKey() {
+        return `${STORAGE_PREFIX}${this.sessionDate}`;
+      },
+
+      /** Serialise state to JSON and write to localStorage.
+       *  Catches QuotaExceededError gracefully. */
+      save() {
+        const data = {
+          sessionDate:  this.sessionDate,
+          courts:       this.courts,
+          currentView:  this.currentView,
+          players:      this.players,
+          rounds:       this.rounds,
+          sitOuts:      this.sitOuts,
+          stats:        this.stats,
+        };
+        try {
+          localStorage.setItem(this._storageKey(), JSON.stringify(data));
+        } catch (err) {
+          if (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+            showToast('Storage full — oldest sessions may need to be cleared.', 'warning');
+          } else {
+            console.error('AppState.save() failed:', err);
+          }
+        }
+      },
+
+      /** Load a session for a given ISO date string.
+       *  Returns true if data was found and loaded, false otherwise. */
+      load(isoDate) {
+        const key  = `${STORAGE_PREFIX}${isoDate}`;
+        const raw  = localStorage.getItem(key);
+        if (!raw) return false;
+
+        let data;
+        try { data = JSON.parse(raw); }
+        catch { return false; }
+
+        this.sessionDate = data.sessionDate  ?? isoDate;
+        this.courts      = data.courts       ?? 3;
+        this.currentView = data.currentView  ?? VIEWS.SETUP;
+        this.players     = data.players      ?? [];
+        this.rounds      = data.rounds       ?? [];
+        this.sitOuts     = data.sitOuts      ?? {};
+        this.stats       = data.stats        ?? {};
+        this._removedPlayers = [];
+        return true;
+      },
+
+      /** Reset only player + round data for the current date (keeps date/courts). */
+      resetDay() {
+        this.players  = [];
+        this.rounds   = [];
+        this.sitOuts  = {};
+        this.stats    = {};
+        this._removedPlayers = [];
+        this.currentView = VIEWS.SETUP;
+        this.save();
+      },
+
+      /* ─────────────────────────────────────────────────────────
+         PLAYER MUTATIONS
+      ───────────────────────────────────────────────────────── */
+
+      /** Add a player. Returns error string or null on success. */
+      addPlayer(name, level) {
+        const trimmed = name.trim();
+        if (!trimmed) return 'Name cannot be empty.';
+        if (trimmed.length > 40) return 'Name too long (max 40 chars).';
+        const dup = this.players.some(
+          p => p.name.toLowerCase() === trimmed.toLowerCase()
+        );
+        if (dup) return `"${trimmed}" is already in the list.`;
+        if (!LEVELS[level]) return 'Invalid level selected.';
+
+        const player = { id: uid(), name: trimmed, level };
+        this.players.push(player);
+        this._initStats(player.id);
+        this.save();
+        return null;
+      },
+
+      /** Remove a player by id; pushes to undo stack. */
+      removePlayer(id) {
+        const idx = this.players.findIndex(p => p.id === id);
+        if (idx === -1) return;
+        const [removed] = this.players.splice(idx, 1);
+        this._removedPlayers.push({ player: removed, idx });
+        // Remove from stats
+        delete this.stats[id];
+        this.save();
+      },
+
+      /** Undo last player removal. */
+      undoRemove() {
+        if (!this._removedPlayers.length) return;
+        const { player, idx } = this._removedPlayers.pop();
+        this.players.splice(idx, 0, player);
+        this._initStats(player.id);
+        this.save();
+      },
+
+      /** Update an existing player's name and/or level. */
+      updatePlayer(id, name, level) {
+        const p = this.players.find(p => p.id === id);
+        if (!p) return 'Player not found.';
+        const trimmed = name.trim();
+        if (!trimmed) return 'Name cannot be empty.';
+        const dup = this.players.some(
+          q => q.id !== id && q.name.toLowerCase() === trimmed.toLowerCase()
+        );
+        if (dup) return `"${trimmed}" is already in the list.`;
+        if (!LEVELS[level]) return 'Invalid level selected.';
+        p.name  = trimmed;
+        p.level = level;
+        this.save();
+        return null;
+      },
+
+      /* ─────────────────────────────────────────────────────────
+         STATS HELPERS
+      ───────────────────────────────────────────────────────── */
+
+      /** Initialise a stats entry for a new player id. */
+      _initStats(id) {
+        if (!this.stats[id]) {
+          this.stats[id] = { wins: 0, losses: 0, gamesPlayed: 0, partners: {} };
+        }
+      },
+
+      /** Record results for a completed fixture.
+       *  winningPair  / losingPair: array of player ids. */
+      recordResult(winningIds, losingIds) {
+        [...winningIds, ...losingIds].forEach(id => this._initStats(id));
+
+        winningIds.forEach(id => {
+          this.stats[id].wins++;
+          this.stats[id].gamesPlayed++;
+          const partner = winningIds.find(pid => pid !== id);
+          if (partner) {
+            this.stats[id].partners[partner] =
+              (this.stats[id].partners[partner] ?? 0) + 1;
+          }
+        });
+
+        losingIds.forEach(id => {
+          this.stats[id].losses++;
+          this.stats[id].gamesPlayed++;
+          const partner = losingIds.find(pid => pid !== id);
+          if (partner) {
+            this.stats[id].partners[partner] =
+              (this.stats[id].partners[partner] ?? 0) + 1;
+          }
+        });
+
+        this.save();
+      },
+
+      /* ─────────────────────────────────────────────────────────
+         UTILITIES
+      ───────────────────────────────────────────────────────── */
+
+      /** Find a player object by id. */
+      getPlayer(id) { return this.players.find(p => p.id === id) ?? null; },
+
+      /** Current (latest) round object or null. */
+      currentRound() {
+        return this.rounds.length ? this.rounds[this.rounds.length - 1] : null;
+      },
+
+      /** All stored session ISO dates (sorted newest first). */
+      allSessionDates() {
+        const prefix  = STORAGE_PREFIX;
+        const results = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(prefix)) {
+            results.push(key.slice(prefix.length));
+          }
+        }
+        return results.sort((a, b) => b.localeCompare(a));
+      },
+    };
+
+    /* ═══════════════════════════════════════════════════════════════
+       UTILITY FUNCTIONS
+    ═══════════════════════════════════════════════════════════════ */
+
+    /** Generate a short unique id (collision probability negligible for <100 players). */
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    /** Return today's date as "YYYY-MM-DD". */
+    function todayISO() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    /** Format an ISO date string for display, e.g. "Wed 28 May 2026". */
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso + 'T00:00:00');
+      return d.toLocaleDateString('en-AU', {
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+      });
+    }
+
+    /** Return a level badge HTML string. */
+    function levelBadge(level) {
+      const cls = `badge badge-${level.toLowerCase()}`;
+      return `<span class="${cls}">${level}</span>`;
+    }
+
+    /** Escape HTML entities to prevent XSS when inserting user text. */
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    /* ─── Toast notification ───────────────────────────────────── */
+    let _toastTimer = null;
+
+    function showToast(message, type = 'info') {
+      let toast = document.getElementById('app-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'app-toast';
+        Object.assign(toast.style, {
+          position:     'fixed',
+          bottom:       '24px',
+          left:         '50%',
+          transform:    'translateX(-50%)',
+          padding:      '12px 20px',
+          borderRadius: '10px',
+          fontSize:     '0.875rem',
+          fontWeight:   '500',
+          zIndex:       '9999',
+          maxWidth:     '90vw',
+          textAlign:    'center',
+          boxShadow:    '0 4px 16px rgba(0,0,0,.2)',
+          transition:   'opacity .3s ease',
+          lineHeight:   '1.4',
+        });
+        document.body.appendChild(toast);
+      }
+
+      const styles = {
+        info:    { bg: '#2e7d32', color: '#fff' },
+        warning: { bg: '#f57f17', color: '#fff' },
+        error:   { bg: '#c62828', color: '#fff' },
+        success: { bg: '#1565c0', color: '#fff' },
+      };
+      const s = styles[type] ?? styles.info;
+      toast.style.background = s.bg;
+      toast.style.color      = s.color;
+      toast.textContent      = message;
+      toast.style.opacity    = '1';
+      toast.style.display    = 'block';
+
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => { toast.style.display = 'none'; }, 320);
+      }, 3200);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RENDER ENGINE  — thin dispatcher
+    ═══════════════════════════════════════════════════════════════ */
+
+    /** Main render dispatcher — called after every state mutation.
+     *  Switches between views and updates the navigation bar. */
+    function renderApp() {
+      const container = document.getElementById('view-container');
+      if (!container) return;
+
+      /* Animate the transition */
+      container.classList.remove('view-enter');
+      void container.offsetWidth; // reflow to restart animation
+      container.classList.add('view-enter');
+
+      /* Dispatch to view renderer */
+      switch (AppState.currentView) {
+        case VIEWS.SETUP:  renderSetupView(container);  break;
+        case VIEWS.ROUND:  renderRoundView(container);  break;
+        case VIEWS.STATS:  renderStatsView(container);  break;
+        default:           renderSetupView(container);
+      }
+
+      /* Update navigation bar */
+      renderNav();
+    }
+
+    /* ─── Navigation bar renderer ──────────────────────────────── */
+    function renderNav() {
+      const meta    = document.getElementById('nav-meta');
+      const actions = document.getElementById('nav-actions');
+      if (!meta || !actions) return;
+
+      const round = AppState.currentRound();
+      const roundLabel = round ? ` · Round ${round.roundNumber}` : '';
+      meta.textContent = `${formatDate(AppState.sessionDate)}${roundLabel}`;
+
+      /* Build nav buttons */
+      const navItems = [
+        { view: VIEWS.SETUP,  icon: iconSetup(),  label: 'Setup' },
+        { view: VIEWS.ROUND,  icon: iconRound(),  label: 'Round' },
+        { view: VIEWS.STATS,  icon: iconStats(),  label: 'Stats' },
+      ];
+
+      actions.innerHTML = navItems.map(item => `
+        <button
+          class="nav-btn${AppState.currentView === item.view ? ' active' : ''}"
+          onclick="switchView('${item.view}')"
+          role="menuitem"
+          aria-label="Go to ${item.label}"
+          aria-current="${AppState.currentView === item.view ? 'page' : 'false'}"
+        >
+          ${item.icon}
+          <span>${item.label}</span>
+        </button>
+      `).join('');
+    }
+
+    /** Switch view and re-render. */
+    function switchView(view) {
+      if (!VIEWS[view]) return;
+      AppState.currentView = view;
+      AppState.save();
+      renderApp();
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SETUP VIEW  (Part 2)
+    ═══════════════════════════════════════════════════════════════ */
+
+    /** Tracks which player row is currently in inline-edit mode. */
+    let _setupEditingId = null;
+
+    /** Tracks which fixture card is currently in inline-edit mode (null = none). */
+    let _roundEditingFixtureId = null;
+
+    function renderSetupView(container) {
+      const players = AppState.players;
+      const canGen  = players.length >= 4;
+
+      container.innerHTML = `
+        <!-- Session Meta Card -->
+        <div class="card">
+          <h2 class="card-title">📅 Session Details</h2>
+          <div class="setup-meta-grid">
+            <div class="form-group">
+              <label class="form-label" for="setup-date">Date</label>
+              <input type="date" id="setup-date" class="form-input"
+                value="${esc(AppState.sessionDate)}"
+                onchange="setupDateChange(this.value)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setup-courts">Courts (1–6)</label>
+              <input type="number" id="setup-courts" class="form-input"
+                value="${AppState.courts}" min="1" max="6"
+                onchange="setupCourtsChange(this.value)"
+                oninput="setupCourtsChange(this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Player Card -->
+        <div class="card">
+          <h2 class="card-title">➕ Add Player</h2>
+          <div class="form-group" style="margin-bottom:var(--sp-3)">
+            <label class="form-label" for="setup-pname">Player Name</label>
+            <input type="text" id="setup-pname" class="form-input"
+              placeholder="Enter player name…" maxlength="40" autocomplete="off"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();setupAddPlayer();}"
+              oninput="setupClearErr('setup-pname-err','setup-pname')" />
+            <div class="form-error" id="setup-pname-err" role="alert"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:var(--sp-4)">
+            <span class="form-label" id="setup-level-lbl">Skill Level</span>
+            <div class="level-seg" role="radiogroup" aria-labelledby="setup-level-lbl">
+              ${buildLevelSeg('setup-level', 'Intermediate')}
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="setupAddPlayer()">
+            ＋ Add Player
+          </button>
+        </div>
+
+        <!-- Player List Card -->
+        <div class="card">
+          <div class="card-title-row">
+            <h2 class="card-title">
+              👥 Players <span class="player-count-badge">${players.length}</span>
+            </h2>
+            ${AppState._removedPlayers.length > 0
+              ? `<button class="btn btn-secondary btn-sm" onclick="setupUndoRemove()">↩ Undo Remove</button>`
+              : ''}
+          </div>
+          ${players.length === 0
+            ? `<div class="empty-state" style="padding:var(--sp-8) var(--sp-4)">
+                 <div class="empty-state-icon">🏸</div>
+                 <p class="empty-state-text">No players yet — add some above!</p>
+               </div>`
+            : `<ul class="player-list">${
+                players.map(p => _setupEditingId === p.id
+                  ? _renderEditRow(p)
+                  : _renderPlayerRow(p)
+                ).join('')
+              }</ul>`
+          }
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="setup-footer">
+          <button class="btn btn-danger btn-sm" onclick="setupResetDay()"
+            ${players.length === 0 && AppState.rounds.length === 0 ? 'disabled' : ''}>
+            🗑 Reset Day
+          </button>
+          <button class="btn btn-primary" onclick="setupGenerateFixtures()"
+            ${!canGen ? 'disabled' : ''}>
+            Generate Fixtures →
+            <span class="generate-meta">
+              ${players.length} player${players.length !== 1 ? 's' : ''}
+              · ${AppState.courts} court${AppState.courts !== 1 ? 's' : ''}
+            </span>
+          </button>
+        </div>
+        ${!canGen && players.length > 0
+          ? `<div class="notice notice-warning" style="margin-top:var(--sp-3)">
+               ⚠️ Need at least 4 players to generate fixtures (${players.length} added so far).
+             </div>`
+          : ''}
+      `;
+    }
+
+    /* ─── Player row renderers ──────────────────────────────────── */
+
+    function _renderPlayerRow(p) {
+      return `
+        <li class="player-row" id="prow-${p.id}">
+          <div class="player-info">
+            <span class="player-name">${esc(p.name)}</span>
+            ${levelBadge(p.level)}
+          </div>
+          <div class="player-actions">
+            <button class="btn btn-icon" title="Edit" aria-label="Edit ${esc(p.name)}"
+              onclick="setupStartEdit('${p.id}')">${iconEdit()}</button>
+            <button class="btn btn-icon" title="Remove" aria-label="Remove ${esc(p.name)}"
+              style="color:var(--clr-danger)"
+              onclick="setupRemovePlayer('${p.id}')">${iconTrash()}</button>
+          </div>
+        </li>`;
+    }
+
+    function _renderEditRow(p) {
+      return `
+        <li class="player-row player-row-editing" id="prow-${p.id}">
+          <div class="edit-form">
+            <div class="form-group">
+              <input type="text" id="edit-name-${p.id}" class="form-input"
+                value="${esc(p.name)}" maxlength="40" autocomplete="off"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();setupSaveEdit('${p.id}');}if(event.key==='Escape'){setupCancelEdit('${p.id}');}"
+                oninput="setupClearErr('edit-err-${p.id}','edit-name-${p.id}')" />
+              <div class="form-error" id="edit-err-${p.id}" role="alert"></div>
+            </div>
+            <div class="level-seg level-seg-sm" role="radiogroup" aria-label="Edit skill level">
+              ${buildLevelSeg('edit-lvl-' + p.id, p.level)}
+            </div>
+            <div class="edit-btns">
+              <button class="btn btn-primary btn-sm" onclick="setupSaveEdit('${p.id}')">Save</button>
+              <button class="btn btn-ghost btn-sm" onclick="setupCancelEdit('${p.id}')">Cancel</button>
+            </div>
+          </div>
+        </li>`;
+    }
+
+    /**
+     * Build the 3-option level radio group HTML.
+     * @param {string} name           - radio input name attribute
+     * @param {string} selectedLevel  - pre-checked level value
+     */
+    function buildLevelSeg(name, selectedLevel) {
+      return ['Beginner', 'Intermediate', 'Advanced'].map(lvl => `
+        <label class="level-seg-item">
+          <input type="radio" name="${esc(name)}" value="${lvl}"${lvl === selectedLevel ? ' checked' : ''} />
+          <span class="level-seg-label level-seg-${lvl.toLowerCase()}">${lvl}</span>
+        </label>`).join('');
+    }
+
+    /* ─── Setup event handlers ──────────────────────────────────── */
+
+    /** Clear an inline validation error. */
+    function setupClearErr(errId, inputId) {
+      const e = document.getElementById(errId);
+      const i = document.getElementById(inputId);
+      if (e) e.textContent = '';
+      if (i) i.classList.remove('error');
+    }
+
+    /** User changed the session date picker. */
+    function setupDateChange(val) {
+      if (!val || val === AppState.sessionDate) return;
+      _setupEditingId = null;
+      if (!AppState.load(val)) {
+        /* No saved data for this date — start a fresh session */
+        AppState.sessionDate      = val;
+        AppState.players          = [];
+        AppState.rounds           = [];
+        AppState.sitOuts          = {};
+        AppState.stats            = {};
+        AppState._removedPlayers  = [];
+        AppState.currentView      = VIEWS.SETUP;
+        AppState.save();
+      }
+      renderApp();
+    }
+
+    /** User changed the courts number input. */
+    function setupCourtsChange(val) {
+      const n = parseInt(val, 10);
+      /* Edge-case: clamp to 1–6, ignore NaN / out-of-range */
+      if (isNaN(n)) return;
+      const clamped = Math.max(1, Math.min(6, n));
+      AppState.courts = clamped;
+      AppState.save();
+      renderNav(); /* update nav meta without full re-render */
+    }
+
+    /** Add Player button handler. */
+    function setupAddPlayer() {
+      const nameEl  = document.getElementById('setup-pname');
+      const errEl   = document.getElementById('setup-pname-err');
+      if (!nameEl || !errEl) return;
+      const levelEl = document.querySelector('input[name="setup-level"]:checked');
+      const level   = levelEl ? levelEl.value : 'Intermediate';
+
+      const err = AppState.addPlayer(nameEl.value, level);
+      if (err) {
+        errEl.textContent = err;
+        nameEl.classList.add('error');
+        nameEl.focus();
+        return;
+      }
+      nameEl.value = '';
+      errEl.textContent = '';
+      nameEl.classList.remove('error');
+      nameEl.focus();
+      renderApp();
+    }
+
+    /** Remove a player by id with undo support. */
+    function setupRemovePlayer(id) {
+      if (_setupEditingId === id) _setupEditingId = null;
+      AppState.removePlayer(id);
+      renderApp();
+    }
+
+    /** Undo last player removal. */
+    function setupUndoRemove() {
+      AppState.undoRemove();
+      renderApp();
+    }
+
+    /** Switch a player row into inline-edit mode. */
+    function setupStartEdit(id) {
+      _setupEditingId = id;
+      renderApp();
+      setTimeout(() => {
+        const el = document.getElementById('edit-name-' + id);
+        if (el) { el.focus(); el.select(); }
+      }, 30);
+    }
+
+    /** Save the inline edit for a player row. */
+    function setupSaveEdit(id) {
+      const nameEl  = document.getElementById('edit-name-' + id);
+      const errEl   = document.getElementById('edit-err-' + id);
+      const levelEl = document.querySelector('input[name="edit-lvl-' + id + '"]:checked');
+      if (!nameEl || !errEl || !levelEl) return;
+
+      const err = AppState.updatePlayer(id, nameEl.value, levelEl.value);
+      if (err) {
+        errEl.textContent = err;
+        nameEl.classList.add('error');
+        nameEl.focus();
+        return;
+      }
+      _setupEditingId = null;
+      renderApp();
+    }
+
+    /** Cancel inline edit and restore normal row. */
+    function setupCancelEdit(id) {
+      _setupEditingId = null;
+      renderApp();
+    }
+
+    /** Reset all data for the current session date (with confirmation). */
+    function setupResetDay() {
+      if (!window.confirm(
+        'Reset all players and rounds for ' + formatDate(AppState.sessionDate) + '?\n\nThis cannot be undone.'
+      )) return;
+      AppState.resetDay();
+      _setupEditingId = null;
+      renderApp();
+      showToast('Session has been reset.', 'info');
+    }
+
+    /** Generate fixtures for round 1 (or next round). */
+    function setupGenerateFixtures() {
+      if (AppState.players.length < 4) {
+        showToast('Need at least 4 players to generate fixtures.', 'warning');
+        return;
+      }
+      generateRound();
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ROUND VIEW  (Part 4)
+    ═══════════════════════════════════════════════════════════════ */
+
+    function renderRoundView(container) {
+      const round = AppState.currentRound();
+
+      /* Guard: no round generated yet — redirect back to setup */
+      if (!round) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🏸</div>
+            <p class="empty-state-text">No round generated yet.</p>
+            <button class="btn btn-primary" style="margin-top:var(--sp-4)"
+              onclick="switchView('SETUP')">Go to Setup</button>
+          </div>`;
+        return;
+      }
+
+      const fixtures    = round.fixtures || [];
+      const decided     = fixtures.filter(f => f.winner !== null).length;
+      const total       = fixtures.length;
+      const allDecided  = decided === total && total > 0;
+      const anyDecided  = decided > 0;
+      const pct         = total > 0 ? Math.round((decided / total) * 100) : 0;
+
+      /* Sit-out player lookup */
+      const sitOutPlayer = round.sitOut ? AppState.getPlayer(round.sitOut) : null;
+
+      /* Match quality CSS class */
+      function mqClass(q) {
+        if (q === 'Well Matched')    return 'mq-well';
+        if (q === 'Close Match')     return 'mq-close';
+        if (q === 'Slight Mismatch') return 'mq-slight';
+        return 'mq-uneven';
+      }
+
+      /* Build one fixture card */
+      function fixtureCard(f) {
+        const t1Won  = f.winner === 'team1';
+        const t2Won  = f.winner === 'team2';
+        const isEditing = (_roundEditingFixtureId === f.id);
+        const hasWin = f.winner !== null;
+
+        /* Build player select options — all session players as <option> elements */
+        function playerOptions(selectedId) {
+          return AppState.players.map(p =>
+            `<option value="${esc(p.id)}"${p.id === selectedId ? ' selected' : ''}>${esc(p.name)} (${esc(p.level)})</option>`
+          ).join('');
+        }
+
+        function teamBlock(team, teamKey, label) {
+          const won  = f.winner === teamKey;
+          const lost = hasWin && !won;
+          const cls  = won ? 'team-winner' : lost ? 'team-loser' : '';
+          return `
+            <div class="fixture-team ${cls}">
+              <div class="fixture-team-label">${label}</div>
+              ${(team.players || []).map(p => `
+                <div class="fixture-player">
+                  <span class="fixture-player-name">${esc(p.name)}</span>
+                  ${levelBadge(p.level)}
+                </div>`).join('')}
+            </div>`;
+        }
+
+        return `
+          <div class="fixture-card" id="fixture-${f.id}">
+            <div class="fixture-court-label">
+              <span>Court ${f.court}</span>
+              <span class="match-quality-tag ${mqClass(f.matchQuality)}">${esc(f.matchQuality)}</span>
+              ${!isEditing
+                ? `<button class="fixture-court-edit-btn"
+                    onclick="roundStartEditFixture('${f.id}')"
+                    title="Edit players for this fixture"
+                    aria-label="Edit Court ${f.court}">
+                    ✏️ Edit
+                  </button>`
+                : `<button class="fixture-court-edit-btn"
+                    onclick="roundCancelEditFixture()"
+                    title="Cancel editing"
+                    style="background:rgba(244,67,54,.35)">
+                    ✕ Cancel
+                  </button>`}
+            </div>
+            ${isEditing ? `
+            <div class="fixture-edit-mode">
+              <div class="fixture-edit-teams-grid">
+                <div>
+                  <div class="fixture-edit-team-label">Team 1</div>
+                  <select class="fixture-edit-select" id="edit-t1p1-${f.id}" aria-label="Team 1 Player 1">
+                    ${playerOptions(f.team1.players[0]?.id)}
+                  </select>
+                  <select class="fixture-edit-select" id="edit-t1p2-${f.id}" aria-label="Team 1 Player 2">
+                    ${playerOptions(f.team1.players[1]?.id)}
+                  </select>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--clr-text-muted)">VS</div>
+                <div>
+                  <div class="fixture-edit-team-label">Team 2</div>
+                  <select class="fixture-edit-select" id="edit-t2p1-${f.id}" aria-label="Team 2 Player 1">
+                    ${playerOptions(f.team2.players[0]?.id)}
+                  </select>
+                  <select class="fixture-edit-select" id="edit-t2p2-${f.id}" aria-label="Team 2 Player 2">
+                    ${playerOptions(f.team2.players[1]?.id)}
+                  </select>
+                </div>
+              </div>
+              <div class="fixture-edit-btn-row">
+                <button class="btn btn-primary btn-sm" onclick="roundSaveEditFixture('${f.id}')">
+                  ✔ Save Changes
+                </button>
+              </div>
+            </div>` : `
+            <div class="fixture-teams">
+              ${teamBlock(f.team1, 'team1', 'Team 1')}
+              <div class="fixture-vs">VS</div>
+              ${teamBlock(f.team2, 'team2', 'Team 2')}
+            </div>
+            <div class="fixture-actions">
+              <button class="btn-win${t1Won ? ' win-selected' : t2Won ? ' lose-dimmed' : ''}"
+                onclick="roundSelectWinner('${f.id}','team1')"
+                aria-pressed="${t1Won}"
+                aria-label="Team 1 won court ${f.court}">
+                ${t1Won ? '✅ ' : ''}Team 1 Won
+              </button>
+              <button class="btn-win${t2Won ? ' win-selected' : t1Won ? ' lose-dimmed' : ''}"
+                onclick="roundSelectWinner('${f.id}','team2')"
+                aria-pressed="${t2Won}"
+                aria-label="Team 2 won court ${f.court}">
+                ${t2Won ? '✅ ' : ''}Team 2 Won
+              </button>
+            </div>`}
+          </div>`;
+      }
+
+      container.innerHTML = `
+        <!-- Round header -->
+        <div class="round-header">
+          ${!anyDecided
+            ? `<button class="btn btn-icon" title="Back to Setup"
+                 aria-label="Back to Setup"
+                 onclick="switchView('SETUP')">${iconBack()}</button>`
+            : ''}
+          <div>
+            <div class="round-title">🏸 Round ${round.roundNumber}</div>
+            <div class="round-subtitle">${formatDate(AppState.sessionDate)}</div>
+          </div>
+        </div>
+
+        <!-- Sit-out notice -->
+        ${sitOutPlayer ? `
+          <div class="notice notice-warning" style="margin-bottom:var(--sp-4)">
+            ⏸️ <strong>${esc(sitOutPlayer.name)}</strong> is sitting out this round.
+          </div>` : ''}
+
+        <!-- Progress bar -->
+        <div class="round-progress">
+          <div class="round-progress-bar" role="progressbar"
+            aria-valuenow="${decided}" aria-valuemin="0" aria-valuemax="${total}">
+            <div class="round-progress-fill" style="width:${pct}%"></div>
+          </div>
+          <span class="round-progress-label">${decided}/${total} results</span>
+        </div>
+
+        <!-- Fixture cards -->
+        ${fixtures.map(f => fixtureCard(f)).join('')}
+
+        <!-- Footer -->
+        <div class="round-footer">
+          ${!allDecided ? `
+            <div class="notice notice-info">
+              📝 Select a winner for all ${total} court${total !== 1 ? 's' : ''} to continue.
+            </div>` : ''}
+          <div class="round-footer-row">
+            <button class="btn btn-primary" style="flex:1"
+              onclick="roundStartNext()"
+              ${!allDecided ? 'disabled' : ''}>
+              Start Next Round →
+            </button>
+            <button class="btn btn-secondary"
+              onclick="switchView('STATS')">
+              📊 Stats
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ─── Round view event handlers ──────────────────────────────── */
+
+    /**
+     * Record the winning team for a fixture and persist.
+     * Allows changing the selection before the round is finalised.
+     * @param {string} fixtureId - fixture.id
+     * @param {string} winner    - 'team1' | 'team2'
+     */
+    function roundSelectWinner(fixtureId, winner) {
+      const round = AppState.currentRound();
+      if (!round) return;
+
+      const fixture = round.fixtures.find(f => f.id === fixtureId);
+      if (!fixture) return;
+
+      /* Toggle: clicking the same button again de-selects it */
+      fixture.winner = fixture.winner === winner ? null : winner;
+
+      /* Update winnersSelected flag */
+      round.winnersSelected = round.fixtures.every(f => f.winner !== null);
+
+      AppState.save();
+      renderApp();
+    }
+
+    /**
+     * Finalise the current round, commit all results to stats,
+     * then generate the next round.
+     */
+    function roundStartNext() {
+      const round = AppState.currentRound();
+      if (!round) return;
+
+      const allDecided = round.fixtures.every(f => f.winner !== null);
+      if (!allDecided) {
+        showToast('Please select a winner for every court first.', 'warning');
+        return;
+      }
+
+      /* Commit results to AppState.stats */
+      round.fixtures.forEach(f => {
+        const winningTeam = f.winner === 'team1' ? f.team1 : f.team2;
+        const losingTeam  = f.winner === 'team1' ? f.team2 : f.team1;
+        AppState.recordResult(
+          winningTeam.players.map(p => p.id),
+          losingTeam.players.map(p => p.id)
+        );
+      });
+
+      /* Mark round complete */
+      round.winnersSelected = true;
+      AppState.save();
+
+      /* Generate the next round */
+      generateRound();
+    }
+
+    /* --- Fixture edit handlers ------------------------------------ */
+
+    /** Enter inline edit mode for a fixture card. */
+    function roundStartEditFixture(fixtureId) {
+      _roundEditingFixtureId = fixtureId;
+      renderApp();
+    }
+
+    /** Cancel editing without saving. */
+    function roundCancelEditFixture() {
+      _roundEditingFixtureId = null;
+      renderApp();
+    }
+
+    /**
+     * Save the edited player assignments for a fixture.
+     * Validates no duplicate players within the same fixture.
+     * Warns (but allows) if the same player appears in multiple courts.
+     */
+    function roundSaveEditFixture(fixtureId) {
+      const round = AppState.currentRound();
+      if (!round) return;
+
+      const fixture = round.fixtures.find(f => f.id === fixtureId);
+      if (!fixture) return;
+
+      const t1p1Id = document.getElementById('edit-t1p1-' + fixtureId)?.value;
+      const t1p2Id = document.getElementById('edit-t1p2-' + fixtureId)?.value;
+      const t2p1Id = document.getElementById('edit-t2p1-' + fixtureId)?.value;
+      const t2p2Id = document.getElementById('edit-t2p2-' + fixtureId)?.value;
+
+      if (!t1p1Id || !t1p2Id || !t2p1Id || !t2p2Id) {
+        showToast('Please select a player for every slot.', 'warning');
+        return;
+      }
+
+      /* Enforce uniqueness within this fixture */
+      const ids = [t1p1Id, t1p2Id, t2p1Id, t2p2Id];
+      if (new Set(ids).size !== 4) {
+        showToast('Each player can only appear once per court.', 'warning');
+        return;
+      }
+
+      /* Warn (non-blocking) if a player is in another court too */
+      const otherIds = new Set(
+        round.fixtures
+          .filter(f => f.id !== fixtureId)
+          .flatMap(f => [
+            ...f.team1.players.map(p => p.id),
+            ...f.team2.players.map(p => p.id),
+          ])
+      );
+      const conflicts = ids.filter(id => otherIds.has(id));
+      if (conflicts.length > 0) {
+        const names = conflicts
+          .map(id => AppState.getPlayer(id)?.name ?? id)
+          .join(', ');
+        showToast(`⚠️ ${names} also assigned to another court — check other fixtures.`, 'warning');
+      }
+
+      /* Resolve player objects */
+      const t1p1 = AppState.getPlayer(t1p1Id);
+      const t1p2 = AppState.getPlayer(t1p2Id);
+      const t2p1 = AppState.getPlayer(t2p1Id);
+      const t2p2 = AppState.getPlayer(t2p2Id);
+
+      if (!t1p1 || !t1p2 || !t2p1 || !t2p2) {
+        showToast('One or more selected players not found.', 'error');
+        return;
+      }
+
+      /* Recompute match quality for the new assignment */
+      const cl1 = LEVELS[t1p1.level] + LEVELS[t1p2.level];
+      const cl2 = LEVELS[t2p1.level] + LEVELS[t2p2.level];
+      const gap = Math.abs(cl1 - cl2);
+      let matchQuality;
+      if (gap === 0)      matchQuality = 'Well Matched';
+      else if (gap === 1) matchQuality = 'Close Match';
+      else if (gap === 2) matchQuality = 'Slight Mismatch';
+      else                matchQuality = 'Uneven Match';
+
+      /* Apply changes */
+      fixture.team1 = { id: fixture.team1.id, players: [t1p1, t1p2], combinedLevel: cl1 };
+      fixture.team2 = { id: fixture.team2.id, players: [t2p1, t2p2], combinedLevel: cl2 };
+      fixture.levelGap     = gap;
+      fixture.matchQuality = matchQuality;
+      fixture.winner       = null; /* reset any previous result */
+
+      _roundEditingFixtureId = null;
+      AppState.save();
+      renderApp();
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       STATS VIEW  (Part 5)
+    ═══════════════════════════════════════════════════════════════ */
+
+    /** Which column the leaderboard is currently sorted by. */
+    let _statsSortKey = 'wins';
+
+    function renderStatsView(container) {
+      const players  = AppState.players;
+      const stats    = AppState.stats;
+      const rounds   = AppState.rounds;
+
+      /* ── 1. Build leaderboard rows ── */
+      const rows = players.map(p => {
+        const s    = stats[p.id] || { wins: 0, losses: 0, gamesPlayed: 0, partners: {} };
+        const pct  = s.gamesPlayed > 0 ? Math.round((s.wins / s.gamesPlayed) * 100) : 0;
+        return { p, wins: s.wins, losses: s.losses, played: s.gamesPlayed, pct };
+      });
+
+      const sortFns = {
+        wins:   (a, b) => b.wins   - a.wins   || b.pct  - a.pct,
+        pct:    (a, b) => b.pct    - a.pct    || b.wins - a.wins,
+        played: (a, b) => b.played - a.played || b.wins - a.wins,
+      };
+      rows.sort(sortFns[_statsSortKey] || sortFns.wins);
+
+      const rankClass = ['lb-row-gold', 'lb-row-silver', 'lb-row-bronze'];
+
+      const leaderboardHTML = rows.length === 0
+        ? `<p class="text-muted text-sm" style="padding:var(--sp-4) 0">No game results yet.</p>`
+        : `<div class="table-scroll">
+            <table class="lb-table" aria-label="Player leaderboard">
+              <thead><tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Level</th>
+                <th>Played</th>
+                <th>Wins</th>
+                <th>Losses</th>
+                <th>Win%</th>
+              </tr></thead>
+              <tbody>
+                ${rows.map((r, i) => `
+                  <tr class="${rankClass[i] || ''}">
+                    <td>${i + 1}</td>
+                    <td>${esc(r.p.name)}</td>
+                    <td>${levelBadge(r.p.level)}</td>
+                    <td>${r.played}</td>
+                    <td><strong>${r.wins}</strong></td>
+                    <td>${r.losses}</td>
+                    <td>
+                      ${r.pct}%
+                      <span class="winpct-bar" aria-hidden="true">
+                        <span class="winpct-fill" style="width:${r.pct}%"></span>
+                      </span>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+           </div>`;
+
+      /* ── 2. Best Partnerships ── */
+      const partnerPairs = [];
+      const seen = new Set();
+      players.forEach(p => {
+        const s = stats[p.id];
+        if (!s) return;
+        Object.entries(s.partners).forEach(([partnerId, wins]) => {
+          const key = [p.id, partnerId].sort().join('|');
+          if (seen.has(key)) return;
+          seen.add(key);
+          const partner = AppState.getPlayer(partnerId);
+          if (!partner) return;
+          partnerPairs.push({ p1: p, p2: partner, wins });
+        });
+      });
+      partnerPairs.sort((a, b) => b.wins - a.wins);
+      const topPairs = partnerPairs.slice(0, 5);
+
+      const partnershipsHTML = topPairs.length === 0
+        ? `<p class="text-muted text-sm" style="padding:var(--sp-4) 0">No partnerships recorded yet.</p>`
+        : topPairs.map((pair, i) => `
+            <div class="partnership-row">
+              <span class="partnership-rank">${i + 1}</span>
+              <span class="partnership-names">
+                ${esc(pair.p1.name)} <span style="color:var(--clr-text-muted)">+</span> ${esc(pair.p2.name)}
+              </span>
+              <span class="partnership-wins">${pair.wins} win${pair.wins !== 1 ? 's' : ''} together</span>
+            </div>`).join('');
+
+      /* ── 3. Player Variety Score ── */
+      const totalPlayers  = players.length;
+      const maxPartners   = Math.max(totalPlayers - 1, 1); /* max possible unique partners */
+
+      const varietyRows = players.map(p => {
+        const s          = stats[p.id];
+        const uniqueCount = s ? Object.keys(s.partners).length : 0;
+        const pct         = Math.round((uniqueCount / maxPartners) * 100);
+        const isLow       = uniqueCount < Math.ceil(totalPlayers / 2);
+        return { p, uniqueCount, maxPartners, pct, isLow };
+      }).sort((a, b) => a.pct - b.pct); /* worst variety first */
+
+      const varietyHTML = varietyRows.length === 0
+        ? `<p class="text-muted text-sm">No data yet.</p>`
+        : varietyRows.map(v => `
+            <div class="variety-row${v.isLow ? ' variety-low' : ''}">
+              ${v.isLow ? '<span title="Needs more variety" style="flex-shrink:0">⚠️</span>' : '<span style="flex-shrink:0;width:1.4rem"></span>'}
+              <span class="variety-name">${esc(v.p.name)}</span>
+              <div class="variety-meter" aria-label="${v.uniqueCount} of ${v.maxPartners} partners">
+                <div class="variety-fill${v.isLow ? ' variety-fill-low' : ''}" style="width:${v.pct}%"></div>
+              </div>
+              <span class="variety-score-text">${v.uniqueCount}/${v.maxPartners}</span>
+            </div>`).join('');
+
+      /* ── 4. Round History accordion ── */
+      const historyHTML = rounds.length === 0
+        ? `<p class="text-muted text-sm" style="padding:var(--sp-4) 0">No rounds played yet.</p>`
+        : [...rounds].reverse().map(round => {
+            const openId     = 'acc-' + round.roundNumber;
+            const isOpen     = round.roundNumber === rounds.length; /* latest open by default */
+            const resultCount = (round.fixtures || []).filter(f => f.winner).length;
+            const sitPlayer   = round.sitOut ? AppState.getPlayer(round.sitOut) : null;
+
+            const fixtureRows = (round.fixtures || []).map(f => {
+              if (!f.winner) {
+                return `<div class="history-fixture-row">
+                  <span class="history-court-tag">C${f.court}</span>
+                  <span class="history-result text-muted">No result recorded</span>
+                </div>`;
+              }
+              const wTeam = f.winner === 'team1' ? f.team1 : f.team2;
+              const lTeam = f.winner === 'team1' ? f.team2 : f.team1;
+              const wNames = (wTeam.players || []).map(p => esc(p.name)).join(' &amp; ');
+              const lNames = (lTeam.players || []).map(p => esc(p.name)).join(' &amp; ');
+              return `<div class="history-fixture-row">
+                <span class="history-court-tag">C${f.court}</span>
+                <span class="history-result">
+                  <span class="history-winner">🏆 ${wNames}</span>
+                  <span style="color:var(--clr-text-muted)"> beat </span>
+                  <span class="history-loser">${lNames}</span>
+                </span>
+              </div>`;
+            }).join('');
+
+            return `
+              <div class="accordion-item" id="${openId}-wrap">
+                <button class="accordion-toggle"
+                  aria-expanded="${isOpen}"
+                  aria-controls="${openId}-body"
+                  onclick="statsToggleAccordion('${openId}')">
+                  <span>Round ${round.roundNumber} &nbsp;<span style="font-weight:400;color:var(--clr-text-muted);font-size:var(--text-xs)">${resultCount}/${(round.fixtures||[]).length} results${sitPlayer ? '  ·  ' + esc(sitPlayer.name) + ' sat out' : ''}</span></span>
+                  <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                <div class="accordion-body${isOpen ? ' open' : ''}" id="${openId}-body">
+                  ${fixtureRows || '<p class="text-muted text-sm">No fixtures.</p>'}
+                </div>
+              </div>`;
+          }).join('');
+
+      /* ── Render ── */
+      container.innerHTML = `
+        <!-- Sort bar + leaderboard -->
+        <div class="card">
+          <h2 class="stats-section-title">🏆 Player Leaderboard</h2>
+          <div class="sort-bar" role="group" aria-label="Sort leaderboard by">
+            <button class="sort-btn${_statsSortKey==='wins'   ? ' active' : ''}" onclick="statsSort('wins')">Wins</button>
+            <button class="sort-btn${_statsSortKey==='pct'    ? ' active' : ''}" onclick="statsSort('pct')">Win %</button>
+            <button class="sort-btn${_statsSortKey==='played' ? ' active' : ''}" onclick="statsSort('played')">Played</button>
+          </div>
+          ${leaderboardHTML}
+        </div>
+
+        <!-- Best Partnerships -->
+        <div class="card">
+          <h2 class="stats-section-title">🤝 Best Partnerships</h2>
+          ${partnershipsHTML}
+        </div>
+
+        <!-- Player Variety -->
+        <div class="card">
+          <h2 class="stats-section-title">🔄 Partner Variety</h2>
+          <p class="text-sm text-muted" style="margin-bottom:var(--sp-3)">
+            Unique partners each player has had. ⚠️ = played with fewer than half the group.
+          </p>
+          ${varietyHTML}
+        </div>
+
+        <!-- Round History -->
+        <div class="card">
+          <h2 class="stats-section-title">📋 Round History</h2>
+          ${historyHTML}
+        </div>
+
+        <!-- Footer -->
+        <div class="stats-footer">
+          <button class="btn btn-secondary" onclick="statsBackToRound()">
+            ← Current Round
+          </button>
+          <button class="btn btn-primary" onclick="statsDownloadReport()">
+            ⬇ Download Report
+          </button>
+        </div>
+      `;
+    }
+
+    /* ─── Stats event handlers ──────────────────────────────────── */
+
+    /** Re-sort the leaderboard and re-render. */
+    function statsSort(key) {
+      _statsSortKey = key;
+      renderApp();
+    }
+
+    /** Toggle an accordion section open/closed. */
+    function statsToggleAccordion(id) {
+      const btn  = document.querySelector(`[aria-controls="${id}-body"]`);
+      const body = document.getElementById(`${id}-body`);
+      if (!btn || !body) return;
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!isOpen));
+      body.classList.toggle('open', !isOpen);
+    }
+
+    /** Navigate back to the current round view (or setup if no round exists). */
+    function statsBackToRound() {
+      const round = AppState.currentRound();
+      switchView(round ? VIEWS.ROUND : VIEWS.SETUP);
+    }
+
+    /** Build a plain-text session report and trigger a .txt file download. */
+    function statsDownloadReport() {
+      const lines    = [];
+      const date     = formatDate(AppState.sessionDate);
+      const players  = AppState.players;
+      const stats    = AppState.stats;
+      const rounds   = AppState.rounds;
+
+      lines.push('BADMINTON SESSION REPORT');
+      lines.push('='.repeat(40));
+      lines.push(`Date    : ${date}`);
+      lines.push(`Courts  : ${AppState.courts}`);
+      lines.push(`Players : ${players.length}`);
+      lines.push(`Rounds  : ${rounds.length}`);
+      lines.push('');
+
+      /* Leaderboard */
+      lines.push('PLAYER LEADERBOARD');
+      lines.push('-'.repeat(40));
+      const lbRows = players.map(p => {
+        const s   = stats[p.id] || { wins: 0, losses: 0, gamesPlayed: 0 };
+        const pct = s.gamesPlayed > 0 ? Math.round((s.wins / s.gamesPlayed) * 100) : 0;
+        return { name: p.name, level: p.level, played: s.gamesPlayed, wins: s.wins, losses: s.losses, pct };
+      }).sort((a, b) => b.wins - a.wins || b.pct - a.pct);
+
+      lbRows.forEach((r, i) => {
+        const medal = ['🥇', '🥈', '🥉'][i] || '  ';
+        lines.push(`${medal} ${String(i+1).padStart(2)}. ${r.name.padEnd(20)} ${r.level.padEnd(14)} Played:${r.played}  Wins:${r.wins}  Losses:${r.losses}  Win%:${r.pct}%`);
+      });
+      lines.push('');
+
+      /* Round history */
+      lines.push('ROUND HISTORY');
+      lines.push('-'.repeat(40));
+      rounds.forEach(round => {
+        lines.push(`Round ${round.roundNumber}:`);
+        if (round.sitOut) {
+          const sp = AppState.getPlayer(round.sitOut);
+          if (sp) lines.push(`  Sitting out: ${sp.name}`);
+        }
+        (round.fixtures || []).forEach(f => {
+          if (!f.winner) {
+            lines.push(`  Court ${f.court}: No result`);
+            return;
+          }
+          const wTeam = f.winner === 'team1' ? f.team1 : f.team2;
+          const lTeam = f.winner === 'team1' ? f.team2 : f.team1;
+          const wNames = (wTeam.players || []).map(p => p.name).join(' & ');
+          const lNames = (lTeam.players || []).map(p => p.name).join(' & ');
+          lines.push(`  Court ${f.court}: ${wNames} beat ${lNames}`);
+        });
+        lines.push('');
+      });
+
+      /* Generate and download */
+      const text     = lines.join('\n');
+      const blob     = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url      = URL.createObjectURL(blob);
+      const filename = `badminton_${AppState.sessionDate}.txt`;
+
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      /* Clean up immediately after click is registered */
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+
+      showToast(`Report downloaded as ${filename}`, 'success');
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SVG ICONS  (inline, no external requests)
+    ═══════════════════════════════════════════════════════════════ */
+    function iconSetup() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M19.07 19.07A10 10 0 0 0 4.93 4.93"/>
+        <line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
+        <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+      </svg>`;
+    }
+    function iconRound() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>`;
+    }
+    function iconStats() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+      </svg>`;
+    }
+    function iconEdit() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>`;
+    }
+    function iconBack() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>`;
+    }
+    function iconTrash() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/>
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>`;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FIXTURE GENERATION  (Part 3)
+    ═══════════════════════════════════════════════════════════════ */
+
+    /**
+     * buildBalancedFixtures(players, courts, previousRounds)
+     * ───────────────────────────────────────────────────────
+     * PURPOSE: Generate court fixtures that are level-balanced AND maximise
+     *          partner variety across rounds.
+     *
+     * ALGORITHM — "Holistic Balance-First":
+     *   1. Sort player pool by level ascending.
+     *   2. If odd player count, sit out the player with the fewest sit-outs
+     *      (tie-broken by lowest level).
+     *   3. Generate every C(n,4) group of 4 players from the remaining pool.
+     *   4. For each group, evaluate all 3 possible 2v2 splits:
+     *        Split A: (p0+p3) vs (p1+p2)  — "snake" — usually best for balance
+     *        Split B: (p0+p2) vs (p1+p3)
+     *        Split C: (p0+p1) vs (p2+p3)  — "block" — often worst for balance
+     *   3. Score each (group, split):
+     *        balance  = -levelGap * 100    — STRONG penalty; balance is primary
+     *        novelty  = pairNovelty(t1) + pairNovelty(t2)  — secondary
+     *        score    = balance + novelty
+     *   4. Sort descending; greedily assign non-overlapping fixtures to courts.
+     *
+     * WHY THIS FIXES "2 Adv vs 2 Beg":
+     *   The old two-phase approach penalised cross-level partnerships (e.g. Adv+Beg),
+     *   causing same-level pairs (Adv+Adv, Beg+Beg) to form first — then be matched
+     *   against each other for a gap-4 uneven fixture.  This holistic approach scores
+     *   FIXTURE balance (not partnership balance) as the primary objective, so the
+     *   snake-split (Adv+Beg vs Adv+Beg, gap=0) always outranks the block-split
+     *   (Adv+Adv vs Beg+Beg, gap=4) and is always chosen when available.
+     *
+     * @param  {Array}   players         — from AppState.players
+     * @param  {number}  courts          — courts available this session
+     * @param  {Array}   previousRounds  — AppState.rounds (for partner history)
+     * @returns {{ sitOut: object|null, fixtures: Fixture[] }}
+     */
+    function buildBalancedFixtures(players, courts, previousRounds) {
+      if (!players || players.length < 4) return { sitOut: null, fixtures: [] };
+
+      /* -- Step 1: sort pool by level ascending -- */
+      const sorted = [...players].sort(
+        (a, b) => LEVELS[a.level] - LEVELS[b.level]
+      );
+
+      /* -- Step 2: handle odd player — sit-out -- */
+      let sitOut = null;
+      let pool   = sorted;
+
+      if (sorted.length % 2 !== 0) {
+        const sitCounts = sorted.map(p => AppState.sitOuts[p.id] ?? 0);
+        const minSits   = Math.min(...sitCounts);
+        const candidate = sorted.find(
+          p => (AppState.sitOuts[p.id] ?? 0) === minSits
+        );
+        const sitter = candidate ?? sorted[0];
+        sitOut = sitter;
+        AppState.sitOuts[sitter.id] =
+          (AppState.sitOuts[sitter.id] ?? 0) + 1;
+        pool = sorted.filter(p => p.id !== sitter.id);
+      }
+
+      const maxFixtures = Math.min(Math.floor(pool.length / 4), courts);
+      if (maxFixtures === 0 || pool.length < 4) return { sitOut, fixtures: [] };
+
+      /* -- Step 3: build partner history from previous rounds -- */
+      const partnerHist = {};
+      (previousRounds || []).forEach(round => {
+        (round.fixtures || []).forEach(fixture => {
+          [fixture.team1, fixture.team2].forEach(team => {
+            if (!team?.players?.length) return;
+            const [a, b] = team.players;
+            if (!a || !b) return;
+            if (!partnerHist[a.id]) partnerHist[a.id] = {};
+            if (!partnerHist[b.id]) partnerHist[b.id] = {};
+            partnerHist[a.id][b.id] = (partnerHist[a.id][b.id] ?? 0) + 1;
+            partnerHist[b.id][a.id] = (partnerHist[b.id][a.id] ?? 0) + 1;
+          });
+        });
+      });
+
+      /** Novelty bonus for a single partnership (same team). */
+      function pairNovelty(p1, p2) {
+        const times =
+          partnerHist[p1.id]?.[p2.id]
+          ?? AppState.stats[p1.id]?.partners[p2.id]
+          ?? 0;
+        if (times === 0) return 20;
+        if (times === 1) return 10;
+        return Math.max(0, 5 - times);
+      }
+
+      /* -- Step 4: generate all C(n,4) candidate fixtures -- */
+      const candidates = [];
+
+      for (let a = 0; a < pool.length - 3; a++) {
+        for (let b = a + 1; b < pool.length - 2; b++) {
+          for (let c = b + 1; c < pool.length - 1; c++) {
+            for (let d = c + 1; d < pool.length; d++) {
+              const g = [pool[a], pool[b], pool[c], pool[d]];
+              const L = g.map(p => LEVELS[p.level]);
+
+              /* All 3 possible 2v2 splits (players are sorted ascending by level) */
+              const splits = [
+                { t1: [g[0], g[3]], t2: [g[1], g[2]],   /* snake  */
+                  gap: Math.abs((L[0] + L[3]) - (L[1] + L[2])) },
+                { t1: [g[0], g[2]], t2: [g[1], g[3]],
+                  gap: Math.abs((L[0] + L[2]) - (L[1] + L[3])) },
+                { t1: [g[0], g[1]], t2: [g[2], g[3]],   /* block  */
+                  gap: Math.abs((L[0] + L[1]) - (L[2] + L[3])) },
+              ];
+
+              for (const sp of splits) {
+                const nov = pairNovelty(sp.t1[0], sp.t1[1])
+                          + pairNovelty(sp.t2[0], sp.t2[1]);
+                /* Balance is primary (×100 weight); novelty is secondary */
+                const score = -sp.gap * 100 + nov;
+                candidates.push({
+                  t1:    sp.t1,
+                  t2:    sp.t2,
+                  gap:   sp.gap,
+                  nov,
+                  score,
+                  ids:   [g[0].id, g[1].id, g[2].id, g[3].id],
+                });
+              }
+            }
+          }
+        }
+      }
+
+      /* -- Step 5: sort descending by score (balance first, then novelty) -- */
+      candidates.sort((a, b) => b.score - a.score || b.nov - a.nov);
+
+      /* -- Step 6: greedy court assignment -- */
+      const usedIds = new Set();
+      const fixtures = [];
+
+      for (const cand of candidates) {
+        if (fixtures.length >= maxFixtures) break;
+        if (cand.ids.some(id => usedIds.has(id))) continue;
+
+        cand.ids.forEach(id => usedIds.add(id));
+
+        const cl1 = LEVELS[cand.t1[0].level] + LEVELS[cand.t1[1].level];
+        const cl2 = LEVELS[cand.t2[0].level] + LEVELS[cand.t2[1].level];
+        const gap = cand.gap;
+
+        let matchQuality;
+        if (gap === 0)      matchQuality = 'Well Matched';
+        else if (gap === 1) matchQuality = 'Close Match';
+        else if (gap === 2) matchQuality = 'Slight Mismatch';
+        else                matchQuality = 'Uneven Match';
+
+        fixtures.push({
+          id:           uid(),
+          court:        fixtures.length + 1,
+          team1:        { id: uid(), players: cand.t1, combinedLevel: cl1 },
+          team2:        { id: uid(), players: cand.t2, combinedLevel: cl2 },
+          levelGap:     gap,
+          matchQuality,
+          winner:       null,
+        });
+      }
+
+      return { sitOut, fixtures };
+    }
+
+    /**
+     * generateRound()
+     * ───────────────
+     * PURPOSE: Orchestrate a full round generation using the holistic
+     *          balance-first algorithm.
+     *
+     * Called by: setupGenerateFixtures() (first round) and
+     *            roundStartNext() (subsequent rounds).
+     */
+    function generateRound() {
+      const players = AppState.players;
+      if (players.length < 4) {
+        showToast('Need at least 4 players to generate fixtures.', 'warning');
+        return;
+      }
+
+      const { sitOut, fixtures } = buildBalancedFixtures(
+        players, AppState.courts, AppState.rounds
+      );
+
+      if (fixtures.length === 0) {
+        showToast('Not enough players to form fixtures.', 'warning');
+        return;
+      }
+
+      const roundNumber = AppState.rounds.length + 1;
+      const round = {
+        roundNumber,
+        fixtures,
+        sitOut:          sitOut ? sitOut.id : null,
+        winnersSelected: false,
+      };
+
+      AppState.rounds.push(round);
+      AppState.currentView = VIEWS.ROUND;
+      AppState.save();
+      renderApp();
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SESSION PICKER MODAL  (Part 6)
+    ═══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Show the new-session picker modal.
+     * Called on first load when today has no saved session but past ones exist.
+     * @param {string}   today      - ISO date string for today
+     * @param {string[]} pastDates  - Up to 5 most-recent session ISO dates
+     */
+    function showSessionPicker(today, pastDates) {
+      const root = document.getElementById('session-modal-root');
+      if (!root) return;
+
+      root.innerHTML = `
+        <div class="modal-backdrop" role="dialog" aria-modal="true"
+             aria-labelledby="modal-title" id="session-modal">
+          <div class="modal">
+            <div>
+              <div class="modal-title" id="modal-title">🏸 New Session</div>
+              <div class="modal-subtitle">${formatDate(today)}</div>
+            </div>
+
+            <button class="btn btn-primary btn-full"
+              onclick="sessionPickerSelect('${today}', true)">
+              ➕ Start fresh session for today
+            </button>
+
+            <div>
+              <p class="text-sm text-muted" style="margin-bottom:var(--sp-2)">
+                Or resume a previous session:
+              </p>
+              <div class="session-date-list">
+                ${pastDates.map(d => {
+                  let saved;
+                  try { saved = JSON.parse(localStorage.getItem('badminton_session_' + d) || '{}'); }
+                  catch { saved = {}; }
+                  const rounds  = (saved.rounds  || []).length;
+                  const players = (saved.players || []).length;
+                  return `
+                    <button class="session-date-btn"
+                      onclick="sessionPickerSelect('${d}', false)">
+                      <span>${formatDate(d)}</span>
+                      <span class="session-date-meta">${players} players &middot; ${rounds} round${rounds !== 1 ? 's' : ''}</span>
+                    </button>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    /** Called when the user picks a session (fresh or resumed). */
+    function sessionPickerSelect(isoDate, fresh) {
+      const root = document.getElementById('session-modal-root');
+      if (root) root.innerHTML = '';
+
+      if (fresh) {
+        /* Start a clean slate for today */
+        AppState.sessionDate      = isoDate;
+        AppState.courts           = 3;
+        AppState.players          = [];
+        AppState.rounds           = [];
+        AppState.sitOuts          = {};
+        AppState.stats            = {};
+        AppState._removedPlayers  = [];
+        AppState.currentView      = VIEWS.SETUP;
+        AppState.save();
+      } else {
+        /* Load the selected past session */
+        if (!AppState.load(isoDate)) {
+          showToast('Could not load that session.', 'error');
+          AppState.sessionDate = isoDate;
+          AppState.save();
+        }
+      }
+      renderApp();
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SERVICE WORKER REGISTRATION  (Part 6)
+    ═══════════════════════════════════════════════════════════════ */
+
+    /**
+     * The Service Worker is injected as a Blob URL so no separate .js file
+     * is needed. It caches this single HTML file for full offline operation.
+     */
+    (function registerServiceWorker() {
+      if (!('serviceWorker' in navigator)) return;
+
+      const SW_VERSION = 'badminton-v1';
+
+      const swCode = `
+        const CACHE = '${SW_VERSION}';
+        const URLS  = [self.location.href];
+
+        self.addEventListener('install', evt => {
+          evt.waitUntil(
+            caches.open(CACHE).then(c => c.addAll(URLS)).then(() => self.skipWaiting())
+          );
+        });
+
+        self.addEventListener('activate', evt => {
+          evt.waitUntil(
+            caches.keys().then(keys =>
+              Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+            ).then(() => self.clients.claim())
+          );
+        });
+
+        /* Cache-first strategy: serve from cache, fall back to network */
+        self.addEventListener('fetch', evt => {
+          if (evt.request.method !== 'GET') return;
+          evt.respondWith(
+            caches.match(evt.request).then(cached => {
+              if (cached) return cached;
+              return fetch(evt.request).then(response => {
+                if (!response || response.status !== 200 || response.type === 'error') {
+                  return response;
+                }
+                const clone = response.clone();
+                caches.open(CACHE).then(c => c.put(evt.request, clone));
+                return response;
+              });
+            }).catch(() => caches.match(evt.request))
+          );
+        });
+      `;
+
+      try {
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const url  = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(url, { scope: './' })
+          .then(reg => {
+            /* Revoke the blob URL after registration — no longer needed */
+            URL.revokeObjectURL(url);
+          })
+          .catch(() => { /* SW registration failures are non-fatal */ });
+      } catch (e) { /* Blob or SW not supported — graceful degradation */ }
+    })();
+
+    /* ═══════════════════════════════════════════════════════════════
+       BOOTSTRAP  (Part 6 — final)
+    ═══════════════════════════════════════════════════════════════ */
+    (function init() {
+      const today = todayISO();
+
+      if (AppState.load(today)) {
+        /* Today's session exists — restore it straight away */
+        renderApp();
+        return;
+      }
+
+      /* No session for today — check for past sessions */
+      const pastDates = AppState.allSessionDates().slice(0, 5); /* max 5 */
+
+      if (pastDates.length === 0) {
+        /* Very first ever use — silently start fresh */
+        AppState.sessionDate = today;
+        AppState.save();
+        renderApp();
+        return;
+      }
+
+      /* Past sessions exist — show the picker modal then render nav shell */
+      AppState.sessionDate = today;
+      renderApp()       /* renders nav + empty setup behind the modal */;
+      showSessionPicker(today, pastDates);
+    })();
+  </script>
+</body>
+</html>
